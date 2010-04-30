@@ -1,5 +1,5 @@
-elib.intl 0.1 documentation
-===========================
+Table Of Contents
+=================
 
 .. toctree::
     :maxdepth: 2
