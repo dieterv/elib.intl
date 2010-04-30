@@ -1,0 +1,5 @@
+.project
+.pydevproject
+.settings
+doc/reference/build/*
+lib/*.egg-info
