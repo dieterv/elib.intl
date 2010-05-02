@@ -94,7 +94,7 @@ def _isofromlcid(lcid):
                1026:    'bg',  #Bulgarian
                1109:    'my',  #Burmese
                1027:    'ca',  #Catalan
-               1116:    None,  #TODO: Cherokee - United States
+               1116:    'chr', #Cherokee - United States
                2052:    'zh',  #Chinese - People's Republic of China
                4100:    'zh',  #Chinese - Singapore
                1028:    'zh',  #Chinese - Taiwan
@@ -107,7 +107,7 @@ def _isofromlcid(lcid):
                1125:    'dv',  #Divehi
                1043:    'nl',  #Dutch - Netherlands
                2067:    'nl',  #Dutch - Belgium
-               1126:    None,  #TODO: Edo
+               1126:    'bin', #Edo
                1033:    'en',  #English - United States
                2057:    'en',  #English - United Kingdom
                3081:    'en',  #English - Australia
@@ -192,7 +192,7 @@ def _isofromlcid(lcid):
                2110:    'ms',  #Malay - Brunei Darussalam
                1100:    'ml',  #Malayalam
                1082:    'mt',  #Maltese
-               1112:    None,  #TODO: Manipuri
+               1112:    'mni', #Manipuri
                1153:    'mi',  #Maori - New Zealand
                1102:    'mr',  #Marathi
                1104:    'mn',  #Mongolian (Cyrillic)
@@ -203,7 +203,7 @@ def _isofromlcid(lcid):
                2068:    'no',  #Norwegian (Nynorsk)
                1096:    'or',  #Oriya
                1138:    'om',  #Oromo
-               1145:    None,  #TODO: Papiamentu
+               1145:    'pap', #Papiamentu
                1123:    'ps',  #Pashto
                1045:    'pl',  #Polish
                1046:    'pt',  #Portuguese - Brazil
@@ -220,7 +220,7 @@ def _isofromlcid(lcid):
                2073:    'ru',  #Russian - Moldava
                1083:    'se',  #Sami (Lappish)
                1103:    'sa',  #Sanskrit
-               1132:    None,  #TODO: Sepedi
+               1132:    'nso', #Sepedi
                3098:    'sr',  #Serbian (Cyrillic)
                2074:    'sr',  #Serbian (Latin)
                1113:    'sd',  #Sindhi - India
@@ -229,7 +229,7 @@ def _isofromlcid(lcid):
                1051:    'sk',  #Slovak
                1060:    'sl',  #Slovenian
                1143:    'so',  #Somali
-               1070:    None,  #TODO: Sorbian
+               1070:    'wen', #Sorbian
                3082:    'es',  #Spanish - Spain (Modern Sort)
                1034:    'es',  #Spanish - Spain (Traditional Sort)
                11274:   'es',  #Spanish - Argentina
@@ -310,7 +310,7 @@ def _getscreenlanguage():
         lang = os.getenv('LANGUAGE')
 
         if lang is None:
-            # Srart with nothing
+            # Start with nothing
             lcid = None
 
             try:
