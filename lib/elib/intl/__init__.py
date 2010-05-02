@@ -53,12 +53,14 @@ logger = getLogger('elib.intl')
 
 def _isofromlcid(lcid):
     '''
-    :param lcid: Microsoft Windows lcid
-    :returns: ISO 639-2 code
+    :param lcid: Microsoft Windows LCID
+    :returns: the ISO 639-1 language code for a given lcid. If there is no
+              ISO 639-1 language code assigned to the language specified by lcid,
+              the ISO 639-2 language code is returned. If the language specified
+              by lcid is unknown in the ISO 639-x database, None is returned.
 
-    Returns the iso 639-2 code for a given lcid.
     More information can be found on the following websites:
-        - ISO 639-2: http://www.loc.gov/standards/iso639-2/
+        - List of ISO 639-1 and ISO 639-2 language codes: http://www.loc.gov/standards/iso639-2/
         - List of known lcid's: http://www.microsoft.com/globaldev/reference/lcid-all.mspx
         - List of known MUI packs: http://www.microsoft.com/globaldev/reference/win2k/setup/Langid.mspx
     '''
@@ -291,13 +293,12 @@ def _isofromlcid(lcid):
 
 def _getscreenlanguage():
     '''
-    :returns: The iso 639-2 code for the current screen language
+    :returns: the ISO 639-x language code for this session.
 
-    Returns the iso 639-2 code for the current Microsoft Windows screen language,
-    determined in the following order:
-        - the 'LANGUAGE' environment variable
-        - the currently selected MUI language pack
-        - the installation language.
+    If the LANGUAGE environment variable is set, it's value overrides the
+    screen language detection. Otherwise the screen language is determined by
+    the currently selected Microsoft Windows MUI language pack or the Microsoft
+    Windows installation language.
 
     Works on Microsoft Windows 2000 and up.
     '''
@@ -333,8 +334,8 @@ def _putenv(name, value):
     :param name: environment variable name
     :param value: environment variable value
 
-    On Microsoft Windows, starting from python 2.4, os.environ changes only work
-    within python and no longer apply to low level C library code within the
+    On Microsoft Windows, starting from Python 2.4, os.environ changes only work
+    within Python and no longer apply to low level C library code within the
     same process. This function calls various Windows functions to force the
     environment variable up to the C runtime.
     '''
@@ -412,7 +413,7 @@ def _install(domain, localedir, asglobal=False):
         if sys.platform == 'win32' or sys.platform == 'nt':
             _putenv('LANGUAGE', _getscreenlanguage())
 
-    # initialize pythons gettext interface
+    # initialize Python's gettext interface
     gettext.bindtextdomain(domain, localedir)
     gettext.bind_textdomain_codeset(domain, 'UTF-8')
     if asglobal:
@@ -458,9 +459,8 @@ def install_module(domain, localedir):
     '''
     :param domain: translation domain
     :param localedir: locale directory
-
-    Returns an anonymous function object, based on domain and localedir.
-    Codeset is always UTF-8.
+    :returns: an anonymous function object, based on domain and localedir.
+              Codeset is always UTF-8.
 
     You may find this function usefull when writing localized modules.
     Use this code to make _() available to your module:
@@ -474,4 +474,4 @@ def install_module(domain, localedir):
     '''
 
     _install(domain, localedir, False)
-    return lambda m: _dugettext(domain, m)
+    return lambda message: _dugettext(domain, message)
