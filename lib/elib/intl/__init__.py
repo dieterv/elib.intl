@@ -64,7 +64,6 @@ def _isofromlcid(lcid):
         - List of known lcid's: http://www.microsoft.com/globaldev/reference/lcid-all.mspx
         - List of known MUI packs: http://www.microsoft.com/globaldev/reference/win2k/setup/Langid.mspx
     '''
-
     mapping = {1078:    'af',  #Afrikaans - South Africa
                1052:    'sq',  #Albanian - Albania
                1118:    'am',  #Amharic - Ethiopia
@@ -302,7 +301,6 @@ def _getscreenlanguage():
 
     Works on Microsoft Windows 2000 and up.
     '''
-
     if sys.platform == 'win32' or sys.platform == 'nt':
         # Start with nothing
         lang = None
@@ -339,7 +337,6 @@ def _putenv(name, value):
     same process. This function calls various Windows functions to force the
     environment variable up to the C runtime.
     '''
-
     if sys.platform == 'win32' or sys.platform == 'nt':
         os.environ[name] = value
 
@@ -386,7 +383,6 @@ def _dugettext(domain, message):
 
     Unicode version of :func:`gettext.dgettext`.
     '''
-
     try:
         t = gettext.translation(domain, gettext._localedirs.get(domain, None),
                                 codeset=gettext._localecodesets.get(domain))
@@ -404,7 +400,6 @@ def _install(domain, localedir, asglobal=False):
     Private function doing all the work for the :func:`elib.intl.install` and
     :func:`elib.intl.install_module` functions.
     '''
-
     # prep locale system
     if asglobal:
         locale.setlocale(locale.LC_ALL, '')
@@ -416,17 +411,20 @@ def _install(domain, localedir, asglobal=False):
     # initialize Python's gettext interface
     gettext.bindtextdomain(domain, localedir)
     gettext.bind_textdomain_codeset(domain, 'UTF-8')
+
     if asglobal:
         gettext.textdomain(domain)
 
     # on windows systems, initialize libintl
-    if not hasattr(locale, 'bindtextdomain'):
+    if sys.platform == 'win32' or sys.platform == 'nt':
         from ctypes import cdll
         libintl = cdll.intl
         libintl.bindtextdomain(domain, localedir)
         libintl.bind_textdomain_codeset(domain, 'UTF-8')
+
         if asglobal:
             libintl.textdomain(domain)
+
         del libintl
 
 def install(domain, localedir):
@@ -441,9 +439,11 @@ def install(domain, localedir):
     candidates for translation, by wrapping them in a call to the _() function,
     like this:
 
-    >>> import elib.intl
-    >>> elib.intl.install('myapplication', '/path/to/usr/share/locale')
-    >>> print _('This string will be translated.')
+    .. sourcecode:: python
+
+        import elib.intl
+        elib.intl.install('myapplication', '/path/to/usr/share/locale')
+        print _('This string will be translated.')
 
     Note that this is only one way, albeit the most convenient way,
     to make the _() function available to your application. Because it affects
@@ -451,7 +451,6 @@ def install(domain, localedir):
     namespace, localized modules should never install _(). Instead, you should
     use :func:`elib.intl.install_module` to make _() available to your module.
     '''
-
     _install(domain, localedir, True)
     gettext.install(domain, localedir, unicode=True)
 
@@ -465,13 +464,14 @@ def install_module(domain, localedir):
     You may find this function usefull when writing localized modules.
     Use this code to make _() available to your module:
 
-    >>> import elib.intl
-    >>> _ = elib.intl.install_module('mymodule', '/path/to/usr/share/locale')
-    >>> print _('This string will be translated.')
+    .. sourcecode:: python
+
+        import elib.intl
+        _ = elib.intl.install_module('mymodule', '/path/to/usr/share/locale')
+        print _('This string will be translated.')
 
     When writing a package, you can usually do this in the package's __init__.py
     file and import the _() function from the package namespace as needed.
     '''
-
     _install(domain, localedir, False)
     return lambda message: _dugettext(domain, message)
