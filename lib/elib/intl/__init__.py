@@ -29,7 +29,10 @@ Microsoft Windows systems:
    as the installation language) provided by MUI packs,
  - makes sure internationalized C libraries which internally invoke gettext() or
    dcgettext() can properly locate their message catalogs. This fixes a known
-   limitation in Python's gettext support when using eg. gtk.builder or gtk.glade.
+   limitation in gettext's Windows support when using eg. gtk.builder or gtk.glade.
+
+See http://www.gnu.org/software/gettext/FAQ.html#windows_setenv for more
+information.
 
 The elib.intl module defines the following functions:
 '''
@@ -359,26 +362,18 @@ def _putenv(name, value):
             result = windll.kernel32.SetEnvironmentVariableW(name, value)
             if result == 0: raise Warning
         except Exception:
-            if sys.flags.verbose:
-                sys.stderr.write('Failed to set environment variable \'%s\' (\'kernel32.SetEnvironmentVariableW\')' % name)
-                sys.stderr.flush()
+            logger.debug('Failed to set environment variable \'%s\' (\'kernel32.SetEnvironmentVariableW\')' % name)
         else:
-            if sys.flags.verbose:
-                sys.stderr.write('Set environment variable \'%s\' to \'%s\' (\'kernel32.SetEnvironmentVariableW\')' % (name, value))
-                sys.stderr.flush()
+            logger.debug('Set environment variable \'%s\' to \'%s\' (\'kernel32.SetEnvironmentVariableW\')' % (name, value))
 
         # Update the copy maintained by msvcrt (used by gtk+ runtime)
         try:
             result = cdll.msvcrt._putenv('%s=%s' % (name, value))
             if result !=0: raise Warning
         except Exception:
-            if sys.flags.verbose:
-                sys.stderr.write('Failed to set environment variable \'%s\' (\'msvcrt._putenv\')' % name)
-                sys.stderr.flush()
+            logger.debug('Failed to set environment variable \'%s\' (\'msvcrt._putenv\')' % name)
         else:
-            if sys.flags.verbose:
-                sys.stderr.write('Set environment variable \'%s\' to \'%s\' (\'msvcrt._putenv\')' % (name, value))
-                sys.stderr.flush()
+            logger.debug('Set environment variable \'%s\' to \'%s\' (\'msvcrt._putenv\')' % (name, value))
 
         # Update the copy maintained by whatever c runtime is used by Python
         try:
@@ -387,13 +382,9 @@ def _putenv(name, value):
             result = cdll.LoadLibrary(msvcrt)._putenv('%s=%s' % (name, value))
             if result != 0: raise Warning
         except Exception:
-            if sys.flags.verbose:
-                sys.stderr.write('Failed to set environment variable \'%s\' (\'%s._putenv\')' % (name, msvcrtname))
-                sys.stderr.flush()
+            logger.debug('Failed to set environment variable \'%s\' (\'%s._putenv\')' % (name, msvcrtname))
         else:
-            if sys.flags.verbose:
-                sys.stderr.write('Set environment variable \'%s\' to \'%s\' (\'%s._putenv\')' % (name, value, msvcrtname))
-                sys.stderr.flush()
+            logger.debug('Set environment variable \'%s\' to \'%s\' (\'%s._putenv\')' % (name, value, msvcrtname))
 
 def _dugettext(domain, message):
     '''
