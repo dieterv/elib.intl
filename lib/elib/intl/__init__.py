@@ -332,48 +332,68 @@ def _putenv(name, value):
     :param name: environment variable name
     :param value: environment variable value
 
-    On Microsoft Windows, starting from Python 2.4, os.environ changes only work
-    within Python and no longer apply to low level C library code within the
-    same process. This function calls various Windows functions to force the
-    environment variable up to the C runtime.
-    '''
-    if sys.platform == 'win32' or sys.platform == 'nt':
-        os.environ[name] = value
+    This function ensures that changes to an environment variable are applied
+    to each copy of the environment variables used by a process. Starting from
+    Python 2.4, os.environ changes only apply to the copy Python keeps (os.environ)
+    and are no longer automatically applied to the other copies for the process.
 
+    On Microsoft Windows, each process has multiple copies of the environment
+    variables, one managed by the OS and one managed by the C library. We also
+    need to take care of the fact that the C library used by Python is not
+    necessarily the same as the C library used by pygtk and friends. This because
+    the latest releases of pygtk and friends are built with mingw32 and are thus
+    linked against msvcrt.dll. The official gtk+ binaries have always been built
+    in this way.
+    '''
+
+    if sys.platform == 'win32' or sys.platform == 'nt':
         from ctypes import windll
         from ctypes import cdll
+        from ctypes.util import find_msvcrt
 
+        # Update Python's copy of the environment variables
+        os.environ[name] = value
+
+        # Update the copy maintained by Windows (so SysInternals Process Explorer sees it)
         try:
             result = windll.kernel32.SetEnvironmentVariableW(name, value)
             if result == 0: raise Warning
-        except Warning:
-            logger.warning('Failed to set environment variable \'%s\' (\'kernel32.SetEnvironmentVariableW\')' % name)
+        except Exception:
+            if sys.flags.verbose:
+                sys.stderr.write('Failed to set environment variable \'%s\' (\'kernel32.SetEnvironmentVariableW\')' % name)
+                sys.stderr.flush()
         else:
-            logger.debug('Set environment variable \'%s\' to \'%s\' (\'kernel32.SetEnvironmentVariableW\')' % (name, value))
+            if sys.flags.verbose:
+                sys.stderr.write('Set environment variable \'%s\' to \'%s\' (\'kernel32.SetEnvironmentVariableW\')' % (name, value))
+                sys.stderr.flush()
 
+        # Update the copy maintained by msvcrt (used by gtk+ runtime)
         try:
             result = cdll.msvcrt._putenv('%s=%s' % (name, value))
-            if result == -1: raise Warning
-        except Warning:
-            logger.warning('Failed to set environment variable \'%s\' (\'msvcrt._putenv\')' % name)
+            if result !=0: raise Warning
+        except Exception:
+            if sys.flags.verbose:
+                sys.stderr.write('Failed to set environment variable \'%s\' (\'msvcrt._putenv\')' % name)
+                sys.stderr.flush()
         else:
-            logger.debug('Set environment variable \'%s\' to \'%s\' (\'msvcrt._putenv\')' % (name, value))
+            if sys.flags.verbose:
+                sys.stderr.write('Set environment variable \'%s\' to \'%s\' (\'msvcrt._putenv\')' % (name, value))
+                sys.stderr.flush()
 
+        # Update the copy maintained by whatever c runtime is used by Python
         try:
-            result = cdll.msvcr71._putenv('%s=%s' % (name, value))
-            if result == -1: raise Warning
-        except Warning:
-            logger.warning('Failed to set environment variable \'%s\' (\'msvcr71._putenv\')' % name)
+            msvcrt = find_msvcrt()
+            msvcrtname = str(msvcrt).split('.')[0] if '.' in msvcrt else str(msvcrt)
+            result = cdll.LoadLibrary(msvcrt)._putenv('%s=%s' % (name, value))
+            if result != 0: raise Warning
+        except Exception:
+            if sys.flags.verbose:
+                sys.stderr.write('Failed to set environment variable \'%s\' (\'%s._putenv\')' % (name, msvcrtname))
+                sys.stderr.flush()
         else:
-            logger.debug('Set environment variable \'%s\' to \'%s\' (\'msvcr71._putenv\')' % (name, value))
-
-        try:
-            result = cdll.msvcr90._putenv('%s=%s' % (name, value))
-            if result == -1: raise Warning
-        except Warning:
-            logger.warning('Failed to set environment variable \'%s\' (\'msvcr90._putenv\')' % name)
-        else:
-            logger.debug('Set environment variable \'%s\' to \'%s\' (\'msvcr90._putenv\')' % (name, value))
+            if sys.flags.verbose:
+                sys.stderr.write('Set environment variable \'%s\' to \'%s\' (\'%s._putenv\')' % (name, value, msvcrtname))
+                sys.stderr.flush()
 
 def _dugettext(domain, message):
     '''
